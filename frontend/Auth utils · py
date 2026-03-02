@@ -1,0 +1,27 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+
+def clear_login_storage():
+    """Clear login data from localStorage"""
+    components.html("""
+    <script>
+    localStorage.removeItem('phishguard_user');
+    window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'logged_out'}, '*');
+    </script>
+    """, height=0)
+
+
+def logout():
+    """Logout user and clear all session data"""
+    # Clear session state
+    st.session_state.clear()
+    
+    # Clear localStorage
+    clear_login_storage()
+    
+    # Set page to launch
+    st.session_state.page = "launch"
+    st.session_state.logged_in = False
+    
+    st.rerun()
