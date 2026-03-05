@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>PhishGuard Warning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0d14;
+      --high: #ff4f6d;
+      --accent: #00e5ff;
+      --text: #cdd6f4;
+      --muted: #6c7086;
+      --border: #1e2535;
+      --low: #3dffa0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background-image:
+        linear-gradient(rgba(255,79,109,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,79,109,0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .card {
+      background: #111520;
+      border: 1px solid var(--high);
+      border-radius: 16px; padding: 48px;
+      max-width: 620px; width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,79,109,0.15);
+      animation: fadeIn 0.4s ease;
+    }
+    .expired-card {
+      background: #111520;
+      border: 1px solid var(--accent);
+      border-radius: 16px; padding: 48px;
+      max-width: 500px; width: 90%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(0,229,255,0.1);
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .icon {
+      font-size: 72px; margin-bottom: 20px;
+      display: block; animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    h1 {
+      font-size: 34px; font-weight: 700;
+      color: var(--high); letter-spacing: 3px;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 13px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px; margin-bottom: 28px;
+    }
+    .risk-badge {
+      display: inline-block; padding: 5px 16px;
+      border-radius: 4px; font-size: 13px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 24px;
+      background: rgba(255,79,109,0.2);
+      color: var(--high); border: 1px solid var(--high);
+    }
+    .scores {
+      display: flex; gap: 16px;
+      justify-content: center; margin-bottom: 24px;
+    }
+    .score-box {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 28px; flex: 1;
+    }
+    .score-box .label {
+      font-size: 10px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .score-box .value {
+      font-size: 38px; font-weight: 700;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .risk-value { color: var(--high); }
+    .safe-value { color: var(--low); }
+    .bar-wrap { margin-bottom: 24px; }
+    .bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace; margin-bottom: 6px;
+    }
+    .bar-track {
+      height: 6px; background: rgba(255,255,255,0.06);
+      border-radius: 4px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 4px;
+      background: var(--high); box-shadow: 0 0 8px var(--high);
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+    .url-box {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 16px;
+      margin-bottom: 28px; text-align: left;
+    }
+    .url-label {
+      font-size: 10px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px; margin-bottom: 6px;
+    }
+    #flaggedUrl {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; color: var(--accent);
+      word-break: break-all; line-height: 1.5;
+    }
+    .warning-msg {
+      background: rgba(255,79,109,0.08);
+      border: 1px solid rgba(255,79,109,0.2);
+      border-radius: 8px; padding: 12px 16px;
+      margin-bottom: 28px; font-size: 13px;
+      color: #ff8fa3; line-height: 1.6;
+    }
+    .buttons {
+      display: flex; gap: 12px;
+      justify-content: center; flex-wrap: wrap;
+    }
+    .btn-back {
+      background: var(--high); color: white;
+      border: none; border-radius: 8px;
+      padding: 14px 32px; font-size: 15px;
+      font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      transition: opacity 0.2s; flex: 1;
+    }
+    .btn-back:hover { opacity: 0.85; }
+    .btn-proceed {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); border-radius: 8px;
+      padding: 14px 32px; font-size: 14px;
+      font-weight: 600; letter-spacing: 1px;
+      cursor: pointer; font-family: 'Rajdhani', sans-serif;
+      transition: all 0.2s; flex: 1;
+    }
+    .btn-proceed:hover { border-color: var(--muted); color: var(--text); }
+    .btn-home {
+      background: var(--accent); color: #0a0d14;
+      border: none; border-radius: 8px;
+      padding: 14px 32px; font-size: 15px;
+      font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; cursor: pointer;
+      font-family: 'Rajdhani', sans-serif;
+      transition: opacity 0.2s;
+    }
+    .btn-home:hover { opacity: 0.85; }
+    .footer {
+      margin-top: 24px; font-size: 11px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Warning Card -->
+  <div class="card" id="warningCard" style="display:none">
+    <span class="icon">🚨</span>
+    <h1>Phishing Detected</h1>
+    <p class="subtitle">PHISHGUARD · ML-POWERED THREAT DETECTION</p>
+    <div class="risk-badge" id="riskBadge">High Risk</div>
+    <div class="scores">
+      <div class="score-box">
+        <div class="label">Risk Score</div>
+        <div class="value risk-value" id="riskScore">—</div>
+      </div>
+      <div class="score-box">
+        <div class="label">Safe Score</div>
+        <div class="value safe-value" id="safeScore">—</div>
+      </div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-label">
+        <span>PHISHING RISK</span>
+        <span id="barPct">—</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="riskBar" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="url-box">
+      <div class="url-label">⚠ FLAGGED URL</div>
+      <div id="flaggedUrl">—</div>
+    </div>
+    <div class="warning-msg">
+      ⛔ This site has been flagged by PhishGuard's ensemble ML model as a likely
+      phishing attempt. Your personal data, passwords, and financial information
+      may be at risk if you proceed.
+    </div>
+    <div class="buttons">
+      <button class="btn-back" onclick="history.back()">← Go Back to Safety</button>
+      <button class="btn-proceed" id="proceedBtn">Proceed Anyway</button>
+    </div>
+    <div class="footer">ENSEMBLE MODEL · CATBOOST + LIGHTGBM</div>
+  </div>
+
+  <!-- Expired Card (shown on refresh) -->
+  <div class="expired-card" id="expiredCard" style="display:none">
+    <span style="font-size: 56px; display:block; margin-bottom: 20px;">🛡️</span>
+    <h1 style="color: var(--accent); font-size: 26px; margin-bottom: 10px;">PhishGuard</h1>
+    <p style="color: var(--muted); font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; letter-spacing: 1px; margin-bottom: 28px; line-height: 1.6;">
+      This warning page has expired.<br/>Navigate to a URL to scan it.
+    </p>
+    <button class="btn-home" onclick="history.back()">← Go Back</button>
+    <div class="footer" style="margin-top: 20px;">ENSEMBLE MODEL · CATBOOST + LIGHTGBM</div>
+  </div>
+
+  <script src="warning.js"></script>
+</body>
+</html>

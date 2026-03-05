@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PhishGuard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0d14;
+      --surface: #111520;
+      --border: #1e2535;
+      --accent: #00e5ff;
+      --accent-dim: rgba(0, 229, 255, 0.12);
+      --text: #cdd6f4;
+      --muted: #6c7086;
+      --high: #ff4f6d;
+      --high-dim: rgba(255, 79, 109, 0.15);
+      --medium: #f5a623;
+      --medium-dim: rgba(245, 166, 35, 0.15);
+      --low: #3dffa0;
+      --low-dim: rgba(61, 255, 160, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 360px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .container { position: relative; z-index: 1; padding: 16px; }
+    .header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 12px rgba(0,229,255,0.2);
+    }
+    .header-text h1 {
+      font-size: 18px; font-weight: 700;
+      letter-spacing: 2px; color: var(--accent); text-transform: uppercase;
+    }
+    .header-text p {
+      font-size: 11px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;
+    }
+    .status-dot {
+      width: 6px; height: 6px; background: var(--low);
+      border-radius: 50%; margin-left: auto;
+      box-shadow: 0 0 8px var(--low); animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .url-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+    }
+    .url-label {
+      font-size: 10px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;
+    }
+    #urlDisplay {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; color: var(--accent); word-break: break-all;
+    }
+    #scanBtn {
+      width: 100%; padding: 11px;
+      background: transparent; border: 1px solid var(--accent);
+      border-radius: 8px; color: var(--accent);
+      font-family: 'Rajdhani', sans-serif; font-size: 14px;
+      font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s;
+    }
+    #scanBtn::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--accent-dim); transform: scaleX(0);
+      transform-origin: left; transition: transform 0.2s;
+    }
+    #scanBtn:hover::before { transform: scaleX(1); }
+    #scanBtn:hover { box-shadow: 0 0 16px rgba(0,229,255,0.25); }
+    #scanBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+    #scanBtn span { position: relative; z-index: 1; }
+    #loadingState {
+      text-align: center; padding: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; color: var(--muted); letter-spacing: 2px;
+    }
+    .loader {
+      width: 32px; height: 32px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .result-card {
+      margin-top: 12px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-card.high-risk { border-color: var(--high); background: var(--high-dim); }
+    .result-card.medium-risk { border-color: var(--medium); background: var(--medium-dim); }
+    .result-card.low-risk { border-color: var(--low); background: var(--low-dim); }
+    .risk-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 4px;
+      font-size: 13px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    .risk-badge.high-risk { background: rgba(255,79,109,0.2); color: var(--high); border: 1px solid var(--high); }
+    .risk-badge.medium-risk { background: rgba(245,166,35,0.2); color: var(--medium); border: 1px solid var(--medium); }
+    .risk-badge.low-risk { background: rgba(61,255,160,0.2); color: var(--low); border: 1px solid var(--low); }
+    .score-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .score-item {
+      background: rgba(0,0,0,0.25); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px; text-align: center;
+    }
+    .score-item .label {
+      font-size: 9px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .score-item .value { font-size: 18px; font-weight: 700; font-family: 'Share Tech Mono', monospace; }
+    .high-risk .score-item:first-child .value { color: var(--high); }
+    .medium-risk .score-item:first-child .value { color: var(--medium); }
+    .low-risk .score-item:first-child .value { color: var(--low); }
+    .bar-section { margin-bottom: 6px; }
+    .bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--muted); margin-bottom: 4px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .bar-track { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+    .bar-fill.high-risk { background: var(--high); box-shadow: 0 0 6px var(--high); }
+    .bar-fill.medium-risk { background: var(--medium); box-shadow: 0 0 6px var(--medium); }
+    .bar-fill.low-risk { background: var(--low); box-shadow: 0 0 6px var(--low); }
+    .safe-fill { background: var(--low); opacity: 0.4; }
+    #errorState {
+      margin-top: 12px; background: rgba(255,79,109,0.1);
+      border: 1px solid rgba(255,79,109,0.3); border-radius: 8px;
+      padding: 12px; font-size: 12px; color: var(--high);
+      font-family: 'Share Tech Mono', monospace; line-height: 1.5;
+    }
+    .hidden { display: none !important; }
+    .footer {
+      margin-top: 14px; padding-top: 10px;
+      border-top: 1px solid var(--border);
+      text-align: center; font-size: 10px; color: var(--muted);
+      font-family: 'Share Tech Mono', monospace; letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🛡️</div>
+      <div class="header-text">
+        <h1>PhishGuard</h1>
+        <p>ML-POWERED URL ANALYSIS</p>
+      </div>
+      <div class="status-dot"></div>
+    </div>
+    <div class="url-box">
+      <div class="url-label">» Active URL</div>
+      <div id="urlDisplay">Loading..
