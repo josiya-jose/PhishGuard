@@ -178,6 +178,7 @@ def predict(data: PredictRequest, db: Session = Depends(get_db)):
             "confidence": confidence,
             "risk_score": risk_score,
             "risk_level": risk_level,
+            "anti_phishing_score": result.get("anti_phishing_score", 0),
             "shap_values": result["shap_values"],
             "base_value": result["base_value"]
         }

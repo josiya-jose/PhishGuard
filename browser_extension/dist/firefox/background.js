@@ -30,10 +30,11 @@ chrome.webNavigation.onErrorOccurred.addListener(async (details) => {
     const data = await response.json();
     console.log("PhishGuard result:", data);
 
-    if (data.risk_score >= 30) {
+    if (data.risk_score >= 70) {
       const warningUrl = chrome.runtime.getURL("warning.html") +
         `?url=${encodeURIComponent(url)}` +
         `&risk=${data.risk_score}` +
+        `&aps=${data.anti_phishing_score}` + 
         `&confidence=${data.confidence}` +
         `&level=${encodeURIComponent(data.risk_level)}`;
 

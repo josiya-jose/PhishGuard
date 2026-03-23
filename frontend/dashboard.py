@@ -9,7 +9,7 @@ import calendar as cal_module
 BACKEND_URL = "http://127.0.0.1:8000"
 
 
-def build_results_html(prediction, confidence, risk_score, risk_level, shap_data):
+def build_results_html(prediction, confidence, risk_score, risk_level, anti_score, shap_data):
 
     # ================== COLOR LOGIC ==================
     if prediction.lower() in ("safe", "legitimate"):
@@ -55,6 +55,7 @@ def build_results_html(prediction, confidence, risk_score, risk_level, shap_data
     conf_percent = round(float(confidence) * 100, 2)
     # Risk score already 0-100 from backend
     risk_percent = round(float(risk_score), 2)
+    anti_percent = round(float(anti_score), 2)
 
     conf_val  = conf_percent
     rs_val    = risk_percent
@@ -67,7 +68,7 @@ def build_results_html(prediction, confidence, risk_score, risk_level, shap_data
 <style>
 *{{margin:0;padding:0;box-sizing:border-box;}}
 body{{font-family:'DM Sans',sans-serif;color:#fff;background:transparent;padding:0 0 20px;}}
-.cards{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}}
+.cards{{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px;}}
 .sc{{background:rgba(255,255,255,0.058);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;border:1px solid rgba(255,255,255,0.10);box-shadow:0 4px 20px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.10);padding:18px 18px 0;position:relative;overflow:hidden;min-height:128px;display:flex;flex-direction:column;transition:transform 0.25s ease,box-shadow 0.25s ease;}}
 .sc:hover{{transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,0,0,0.32);}}
 .sc-label{{font-size:10px;font-weight:700;color:rgba(255,255,255,0.40);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px;}}
@@ -138,7 +139,19 @@ body{{font-family:'DM Sans',sans-serif;color:#fff;background:transparent;padding
   <div class="sc"><div class="sc-label">Confidence</div><div class="sc-row"><div class="sc-val" style="color:#a78bfa;">{conf_val}%</div><div class="sc-arrow" style="color:#a78bfa;">↑</div></div><div class="sc-sub-row"><div class="sc-sub">Model Certainty</div><div class="sc-pct">{conf_percent}%</div></div><div class="sc-bar" style="background:linear-gradient(90deg,#6d28d9,#a78bfa);"></div></div>
   <div class="sc"><div class="sc-label">Risk Score</div><div class="sc-row"><div class="sc-val" style="color:{risk_color};">{rs_val}%</div><div class="sc-arrow" style="color:{risk_color};">{pred_arrow}</div></div><div class="sc-sub-row"><div class="sc-sub">Computed Score</div><div class="sc-pct">{rs_val}%</div></div><div class="sc-bar" style="background:linear-gradient(90deg,{risk_color}66,{risk_color});"></div></div>
   <div class="sc"><div class="sc-label">Risk Level</div><div class="sc-row"><div class="sc-val" style="color:{risk_color};font-size:{'22px' if len(risk_short)>6 else '30px'};">{risk_short}</div><div class="sc-arrow" style="color:{risk_color};">{pred_arrow}</div></div><div class="sc-sub-row"><div class="sc-sub">Threat Level</div><div class="sc-pct">{rs_val}%</div></div><div class="sc-bar" style="background:linear-gradient(90deg,{risk_color}55,{risk_color});"></div></div>
-</div>
+  <div class="sc">
+    <div class="sc-label">Anti-Phishing Score</div>
+    <div class="sc-row">
+      <div class="sc-val" style="color:#34d399;">{anti_percent}%</div>
+      <div class="sc-arrow" style="color:#34d399;">↑</div>
+    </div>
+    <div class="sc-sub-row">
+      <div class="sc-sub">Security Confidence</div>
+      <div class="sc-pct">{anti_percent}%</div>
+    </div>
+    <div class="sc-bar" style="background:linear-gradient(90deg,#34d39966,#34d399);"></div>
+  </div>
+  </div>
 <div class="bottom">
   <div class="tc"><div class="tc-head"><div class="tc-title">⚡ Threat Breakdown</div><div class="tc-sub">Feature influence analysis · {today_str}</div><div class="leg"><span><span class="leg-d" style="background:#f87171;"></span><span class="leg-l">High Risk</span></span><span><span class="leg-d" style="background:#34d399;"></span><span class="leg-l">Low Risk</span></span></div></div><div class="tc-body"><div class="ow" id="ow"><div class="otick"></div><div class="or1"></div><div class="or2"></div><div class="cn" id="cn"><div class="cn-pct" id="cnp">—</div><div class="cn-lbl" id="cnl">Hover a<br>threat</div></div></div></div></div>
   <div class="rc">
@@ -520,11 +533,11 @@ def show():
         try:
             res=requests.post(f"{BACKEND_URL}/predict",json={"url":url_to_scan,"user_id":st.session_state.user_id},timeout=20);progress.empty()
             if res.status_code==200:
-                data=res.json();st.session_state.prediction=data.get("prediction");st.session_state.confidence=data.get("confidence");st.session_state.risk_score=data.get("risk_score");st.session_state.risk_level=data.get("risk_level");st.session_state.shap_values=data.get("shap_values",[]);st.session_state.scan_done=True;st.rerun()
+                data=res.json();st.session_state.prediction=data.get("prediction");st.session_state.confidence=data.get("confidence");st.session_state.risk_score=data.get("risk_score");st.session_state.risk_level=data.get("risk_level");st.session_state.anti_score = data.get("anti_phishing_score", 0);st.session_state.shap_values=data.get("shap_values",[]);st.session_state.scan_done=True;st.rerun()
             else:st.error(f"Backend returned {res.status_code}")
         except Exception as e:progress.empty();st.error(f"Backend error: {e}")
 
     if st.session_state.scan_done:
-        components.html(build_results_html(st.session_state.prediction,st.session_state.confidence,st.session_state.risk_score,st.session_state.risk_level,st.session_state.shap_values),height=940,scrolling=False)
+        components.html(build_results_html(st.session_state.prediction,st.session_state.confidence,st.session_state.risk_score,st.session_state.risk_level,st.session_state.anti_score,st.session_state.shap_values),height=940,scrolling=False)
 
 if __name__=="__main__":show()

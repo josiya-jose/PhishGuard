@@ -11,13 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("warningCard").style.display = "block";
 
     const riskNum = parseFloat(risk) || 0;
-    const safeNum = 100 - riskNum;
+    const aps = params.get("aps") || "0";
+    const apsNum = parseFloat(aps) || 0;
 
+    // Main score = APS
+    document.getElementById("safeScore").textContent =
+      apsNum.toFixed(2) + "%";
+
+    // Keep risk smaller (optional)
     document.getElementById("riskScore").textContent =
       riskNum.toFixed(2) + "%";
-
-    document.getElementById("safeScore").textContent =
-      safeNum.toFixed(2) + "%";
 
     document.getElementById("flaggedUrl").textContent = url;
     document.getElementById("riskBadge").textContent = level;
