@@ -1,4 +1,3 @@
-# backend/main.py
 
 import logging
 from typing import Optional
@@ -39,10 +38,6 @@ app.add_middleware(
 logger = logging.getLogger("uvicorn.error")
 
 
-# ==========================================================
-# DB Dependency
-# ==========================================================
-
 def get_db():
     db = SessionLocal()
     try:
@@ -50,10 +45,6 @@ def get_db():
     finally:
         db.close()
 
-
-# ==========================================================
-# Request Schemas
-# ==========================================================
 
 class SignupRequest(BaseModel):
     name: str
@@ -71,18 +62,13 @@ class PredictRequest(BaseModel):
     user_id: int
 
 
-# ==========================================================
-# Health Check
-# ==========================================================
 
 @app.get("/")
 def home():
     return {"message": "PhishGuard Backend running"}
 
 
-# ==========================================================
 # Signup
-# ==========================================================
 
 @app.post("/signup")
 def signup(data: SignupRequest, db: Session = Depends(get_db)):
@@ -114,9 +100,7 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-# ==========================================================
 # Login
-# ==========================================================
 
 @app.post("/login")
 def login(data: LoginRequest, db: Session = Depends(get_db)):
@@ -141,9 +125,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-# ==========================================================
 # Predict (Updated Logic)
-# ==========================================================
 
 @app.post("/predict")
 def predict(data: PredictRequest, db: Session = Depends(get_db)):
@@ -189,9 +171,7 @@ def predict(data: PredictRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Prediction failed")
 
 
-# ==========================================================
 # Scan History
-# ==========================================================
 
 @app.get("/scan-history/{user_id}")
 def get_scan_history(user_id: int, db: Session = Depends(get_db)):

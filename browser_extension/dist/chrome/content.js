@@ -1,9 +1,9 @@
-// Skip browser internal pages and warning page
+// Skip browser internal pages and extension pages
 if (!window.location.href.startsWith("http")) {
   throw new Error("PhishGuard: Skipping non-http page");
 }
 if (window.location.href.includes(chrome.runtime.id)) {
-  throw new Error("PhishGuard: Skipping warning page");
+  throw new Error("PhishGuard: Skipping extension page");
 }
 
 // Send URL to background.js to scan
@@ -12,7 +12,8 @@ chrome.runtime.sendMessage(
   (data) => {
     if (!data) return;
 
-    if (data.risk_score >= 30) {
+    // Show banner only for meaningful risk
+    if (data.risk_score >= 70) {
       showPhishingAlert(data);
       sendBrowserNotification(data);
     }
@@ -22,6 +23,9 @@ chrome.runtime.sendMessage(
 function showPhishingAlert(data) {
   if (document.getElementById("phishguard-overlay")) return;
 
+  const risk = parseFloat(data.risk_score) || 0;
+  const aps = parseFloat(data.anti_phishing_score) || 0;
+
   const isHigh = data.risk_level === "High Risk";
   const color = isHigh ? "#ff4f6d" : "#f5a623";
   const colorDim = isHigh ? "rgba(255,79,109,0.12)" : "rgba(245,166,35,0.12)";
@@ -29,6 +33,7 @@ function showPhishingAlert(data) {
 
   const overlay = document.createElement("div");
   overlay.id = "phishguard-overlay";
+
   overlay.innerHTML = `
     <div id="phishguard-banner" style="
       position: fixed;
@@ -38,8 +43,7 @@ function showPhishingAlert(data) {
       border-bottom: 2px solid ${color};
       box-shadow: 0 0 30px ${colorDim}, 0 4px 20px rgba(0,0,0,0.6);
       font-family: 'Segoe UI', sans-serif;
-      padding: 0;
-      animation: phishguard-slide-in 0.4s cubic-bezier(0.4,0,0.2,1);
+      animation: phishguard-slide-in 0.4s ease;
     ">
       <style>
         @keyframes phishguard-slide-in {
@@ -50,73 +54,133 @@ function showPhishingAlert(data) {
           0%, 100% { box-shadow: 0 0 0 0 ${color}44; }
           50% { box-shadow: 0 0 0 6px transparent; }
         }
-        #phishguard-banner * { box-sizing: border-box; }
-        #phishguard-close:hover { background: rgba(255,255,255,0.1) !important; }
-        #phishguard-proceed:hover { opacity: 0.8; }
       </style>
 
       <div style="
         max-width: 900px; margin: 0 auto;
-        padding: 14px 20px; display: flex;
-        align-items: center; gap: 14px; flex-wrap: wrap;
+        padding: 14px 20px;
+        display: flex; align-items: center;
+        gap: 14px; flex-wrap: wrap;
       ">
+
+        <!-- Icon -->
         <div style="
           width: 42px; height: 42px;
-          background: ${colorDim}; border: 1px solid ${color};
-          border-radius: 8px; display: flex; align-items: center;
-          justify-content: center; font-size: 20px; flex-shrink: 0;
+          background: ${colorDim};
+          border: 1px solid ${color};
+          border-radius: 8px;
+          display: flex; align-items: center;
+          justify-content: center;
+          font-size: 20px;
           animation: phishguard-pulse 2s infinite;
-        ">${icon}</div>
+        ">
+          ${icon}
+        </div>
 
+        <!-- Text -->
         <div style="flex: 1; min-width: 200px;">
           <div style="
-            color: ${color}; font-size: 15px; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px;
-          ">${icon} ${data.risk_level} — This site may be phishing!</div>
-          <div style="
-            color: #8892b0; font-size: 12px; font-family: monospace;
-            white-space: nowrap; overflow: hidden;
-            text-overflow: ellipsis; max-width: 500px;
-          ">${truncate(window.location.href, 70)}</div>
-        </div>
-
-        <div style="display: flex; gap: 10px; flex-shrink: 0;">
-          <div style="
-            background: rgba(0,0,0,0.4); border: 1px solid #1e2535;
-            border-radius: 8px; padding: 8px 14px; text-align: center;
+            color: ${color};
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
           ">
-            <div style="font-size: 10px; color: #6c7086; font-family: monospace; letter-spacing: 1px; margin-bottom: 2px;">RISK SCORE</div>
-            <div style="font-size: 22px; font-weight: 700; color: ${color}; font-family: monospace;">${data.risk_score}%</div>
+            ${icon} ${data.risk_level} — This site may be phishing!
           </div>
           <div style="
-            background: rgba(0,0,0,0.4); border: 1px solid #1e2535;
-            border-radius: 8px; padding: 8px 14px; text-align: center;
+            color: #8892b0;
+            font-size: 12px;
+            font-family: monospace;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 500px;
           ">
-            <div style="font-size: 10px; color: #6c7086; font-family: monospace; letter-spacing: 1px; margin-bottom: 2px;">SAFE SCORE</div>
-            <div style="font-size: 22px; font-weight: 700; color: #3dffa0; font-family: monospace;">${data.anti_phishing_score}%</div>
+            ${truncate(window.location.href, 70)}
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px; flex-shrink: 0;">
-          <button id="phishguard-close" onclick="document.getElementById('phishguard-overlay').remove()" style="
-            background: transparent; border: 1px solid ${color};
-            color: ${color}; border-radius: 6px; padding: 8px 16px;
-            font-size: 13px; font-weight: 600; cursor: pointer;
-            letter-spacing: 1px; transition: background 0.15s;
-          ">✕ DISMISS</button>
-          <button id="phishguard-proceed" onclick="document.getElementById('phishguard-overlay').remove()" style="
-            background: rgba(255,255,255,0.06); border: 1px solid #1e2535;
-            color: #6c7086; border-radius: 6px; padding: 8px 16px;
-            font-size: 13px; cursor: pointer; letter-spacing: 1px;
-            transition: opacity 0.15s;
-          ">Proceed anyway</button>
+        <!-- Scores -->
+        <div style="display: flex; gap: 10px;">
+
+          <!-- Risk Score -->
+          <div style="
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #1e2535;
+            border-radius: 8px;
+            padding: 8px 14px;
+            text-align: center;
+          ">
+            <div style="font-size: 10px; color: #6c7086; font-family: monospace;">
+              RISK SCORE
+            </div>
+            <div style="
+              font-size: 22px;
+              font-weight: 700;
+              color: ${color};
+              font-family: monospace;
+            ">
+              ${risk.toFixed(2)}%
+            </div>
+          </div>
+
+          <!-- Anti-Phishing Score -->
+          <div style="
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #1e2535;
+            border-radius: 8px;
+            padding: 8px 14px;
+            text-align: center;
+          ">
+            <div style="font-size: 10px; color: #6c7086; font-family: monospace;">
+              ANTI-PHISHING SCORE
+            </div>
+            <div style="
+              font-size: 22px;
+              font-weight: 700;
+              color: #3dffa0;
+              font-family: monospace;
+            ">
+              ${aps.toFixed(2)}%
+            </div>
+          </div>
+
         </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 8px;">
+          <button onclick="document.getElementById('phishguard-overlay').remove()" style="
+            background: transparent;
+            border: 1px solid ${color};
+            color: ${color};
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+          ">
+            DISMISS
+          </button>
+
+          <button onclick="document.getElementById('phishguard-overlay').remove()" style="
+            background: rgba(255,255,255,0.06);
+            border: 1px solid #1e2535;
+            color: #6c7086;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+          ">
+            Proceed
+          </button>
+        </div>
+
       </div>
 
+      <!-- Risk bar -->
       <div style="height: 3px; background: #1e2535;">
         <div style="
-          height: 100%; width: ${data.risk_score}%;
-          background: ${color}; box-shadow: 0 0 8px ${color};
+          height: 100%;
+          width: ${risk}%;
+          background: ${color};
+          box-shadow: 0 0 8px ${color};
           transition: width 1s ease;
         "></div>
       </div>
@@ -132,7 +196,7 @@ function sendBrowserNotification(data) {
   const send = () => {
     if (Notification.permission === "granted") {
       new Notification("⚠️ PhishGuard Alert", {
-        body: `${data.risk_level} detected!\nRisk Score: ${data.risk_score}%\n${truncate(window.location.href, 60)}`,
+        body: `${data.risk_level} detected!\nRisk: ${parseFloat(data.risk_score).toFixed(2)}%`,
         icon: chrome.runtime.getURL("icons/icon48.png"),
         tag: "phishguard-alert",
         requireInteraction: data.risk_level === "High Risk",

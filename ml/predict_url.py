@@ -6,11 +6,10 @@ from catboost import CatBoostClassifier
 
 from ml.feature_extractor import extract_features, get_feature_names
 
-# Paths (your structure)
+# Paths
 LGBM_PATH = "ml/lgbm_model.pkl"
 CAT_PATH = "ml/catboost_model.cbm"
 
-# Load Meghna models
 lgb_model = joblib.load(LGBM_PATH)
 
 cat_model = CatBoostClassifier()
@@ -28,14 +27,14 @@ def predict_url(url: str):
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
 
-    # Meghna features
+    # features
     features_dict = extract_features(url)
     feature_cols = get_feature_names()
 
     X = pd.DataFrame([[features_dict[col] for col in feature_cols]],
                      columns=feature_cols).fillna(0)
 
-    # Probabilities (same logic)
+    # Probabilities
     lgb_prob = float(lgb_model.predict_proba(X)[0][1])
     cat_prob = float(cat_model.predict_proba(X)[0][1])
 
@@ -44,7 +43,7 @@ def predict_url(url: str):
     risk_score = float(round(R * 100, 2))
     confidence_raw = max(R, 1 - R)
     confidence = float(round(confidence_raw, 4))
-    anti_phishing_score = float(round((1 - R) * confidence_raw * 100, 2))
+    anti_phishing_score = float(round(((1 - R) ** 1.5) * confidence_raw * 100, 2))
 
     if R >= 0.7:
         risk_level = "High Risk"
@@ -53,7 +52,7 @@ def predict_url(url: str):
     else:
         risk_level = "Low Risk"
 
-    # SHAP (unchanged)
+    # SHAP 
     try:
         shap_values = explainer.shap_values(X)
 
@@ -84,7 +83,7 @@ def predict_url(url: str):
         "probability": round(R, 4),
         "confidence": confidence,
         "risk_score": risk_score,
-        "anti_phishing_score": anti_phishing_score,  # ✅ NEW
+        "anti_phishing_score": anti_phishing_score,
         "risk_level": risk_level,
         "threshold": THRESHOLD,
         "shap_values": shap_output,
