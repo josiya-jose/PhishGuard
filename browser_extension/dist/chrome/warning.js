@@ -34,5 +34,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("proceedBtn").addEventListener("click", () => {
       window.location.href = url;
     });
+
+    document.getElementById("backBtn").addEventListener("click", () => {
+    chrome.tabs.update({url: "chrome://newtab/"});
+    });
+
+    document.getElementById("homeBtn").addEventListener("click", () => {
+    chrome.tabs.update({url: "chrome://newtab/"});
+    });
   }
 });

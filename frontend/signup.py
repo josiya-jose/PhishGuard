@@ -148,8 +148,8 @@ def show():
         <p>Join PhishGuard to stay protected.</p>
     </div>""", unsafe_allow_html=True)
 
-    name     = st.text_input("Full Name", placeholder="John Doe",          key="signup_name")
-    email    = st.text_input("Email",     placeholder="you@example.com",   key="signup_email")
+    name     = st.text_input("Full Name", placeholder="Enter Your Name",          key="signup_name")
+    email    = st.text_input("Email",     placeholder="Enter Your Email",   key="signup_email")
     password = st.text_input("Password",  placeholder="••••••••", type="password", key="signup_pw")
 
     if st.session_state.get("signup_error"):

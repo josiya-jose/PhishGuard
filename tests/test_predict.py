@@ -4,9 +4,6 @@ from backend.main import app
 
 client = TestClient(app)
 
-# ===============================
-# NORMAL CASE
-# ===============================
 def test_valid_url():
     response = client.post("/predict", json={
         "url": "https://google.com",
@@ -17,9 +14,6 @@ def test_valid_url():
     assert data["risk_score"] >= 0
 
 
-# ===============================
-# BOUNDARY CASE
-# ===============================
 def test_short_url():
     response = client.post("/predict", json={
         "url": "http://a.co",
@@ -28,9 +22,6 @@ def test_short_url():
     assert response.status_code == 200
 
 
-# ===============================
-# NEGATIVE CASE
-# ===============================
 def test_invalid_url():
     response = client.post("/predict", json={
         "url": "not-a-url",
@@ -39,9 +30,6 @@ def test_invalid_url():
     assert response.status_code == 200
 
 
-# ===============================
-# EXCEPTION CASE (MISSING PARAM)
-# ===============================
 def test_missing_url():
     response = client.post("/predict", json={
         "user_id": 1
@@ -49,9 +37,6 @@ def test_missing_url():
     assert response.status_code == 422
 
 
-# ===============================
-# INVALID DATA TYPE
-# ===============================
 def test_wrong_type():
     response = client.post("/predict", json={
         "url": 12345,
@@ -60,9 +45,6 @@ def test_wrong_type():
     assert response.status_code == 422
 
 
-# ===============================
-# PHISHING CASE
-# ===============================
 def test_phishing_url():
     response = client.post("/predict", json={
         "url": "http://free-login-secure-update.xyz",
@@ -72,9 +54,6 @@ def test_phishing_url():
     assert data["risk_score"] > 70
 
 
-# ===============================
-# 🔥 APS FORMULA TEST (CORE PROOF)
-# ===============================
 def test_aps_formula():
     response = client.post("/predict", json={
         "url": "https://google.com",
@@ -91,9 +70,6 @@ def test_aps_formula():
     assert abs(data["anti_phishing_score"] - expected) < 1
 
 
-# ===============================
-# 🔥 BEHAVIOR TEST
-# ===============================
 def test_safe_vs_phishing():
     safe = client.post("/predict", json={
         "url": "https://google.com",
@@ -109,9 +85,6 @@ def test_safe_vs_phishing():
     assert safe["anti_phishing_score"] > phishing["anti_phishing_score"]
 
 
-# ===============================
-# 🔥 CONFIDENCE TEST
-# ===============================
 def test_confidence():
     response = client.post("/predict", json={
         "url": "https://google.com",

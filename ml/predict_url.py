@@ -39,11 +39,12 @@ def predict_url(url: str):
     cat_prob = float(cat_model.predict_proba(X)[0][1])
 
     R = float((lgb_prob + cat_prob) / 2.0)
+    R = 0.5 + (R - 0.5) * 0.75
     prediction = "Phishing" if R >= THRESHOLD else "Legitimate"
     risk_score = float(round(R * 100, 2))
     confidence_raw = max(R, 1 - R)
     confidence = float(round(confidence_raw, 4))
-    anti_phishing_score = float(round(((1 - R) ** 1.5) * confidence_raw * 100, 2))
+    anti_phishing_score = round((1 - R) * 100, 2)
 
     if R >= 0.7:
         risk_level = "High Risk"

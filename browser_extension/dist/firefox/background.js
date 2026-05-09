@@ -73,6 +73,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     return true; // Keep message channel open for async response
   }
+  
 
   // Handle popup request
   if (request.action === "getCurrentTab") {
