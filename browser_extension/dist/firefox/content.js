@@ -149,7 +149,7 @@ function showPhishingAlert(data) {
 
         <!-- Buttons -->
         <div style="display: flex; gap: 8px;">
-          <button onclick="document.getElementById('phishguard-overlay').remove()" style="
+          <button id="dismissBtn" style="
             background: transparent;
             border: 1px solid ${color};
             color: ${color};
@@ -160,7 +160,7 @@ function showPhishingAlert(data) {
             DISMISS
           </button>
 
-          <button onclick="document.getElementById('phishguard-overlay').remove()" style="
+         <button id="proceedBtn" style="
             background: rgba(255,255,255,0.06);
             border: 1px solid #1e2535;
             color: #6c7086;
@@ -188,6 +188,13 @@ function showPhishingAlert(data) {
   `;
 
   document.documentElement.appendChild(overlay);
+  document.getElementById("dismissBtn")?.addEventListener("click", () => {
+  overlay.remove();
+});
+
+document.getElementById("proceedBtn")?.addEventListener("click", () => {
+  overlay.remove();
+});
 }
 
 function sendBrowserNotification(data) {
